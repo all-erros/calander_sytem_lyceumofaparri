@@ -1,1 +1,0 @@
-# calander_sytem_lyceumofaparri
