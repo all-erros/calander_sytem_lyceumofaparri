@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lyceum of Aparri — Event Calendar & Announcements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.14.0/dist/tabler-icons.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'DM Sans',sans-serif;background:#f5f5f5;color:#1a1a1a}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#800000;border-radius:3px}
+::-webkit-scrollbar-track{background:#f1f1f1}
+.fd{font-family:'Playfair Display',serif}
+/* Sidebar */
+.sidebar{width:240px;background:#fff;border-right:1px solid #e5e7eb;position:fixed;top:0;left:0;bottom:0;z-index:50;display:flex;flex-direction:column;transition:transform .3s ease}
+.sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;color:#6b7280;font-size:14px;font-weight:500;transition:all .18s;user-select:none}
+.sidebar-link:hover{background:#fff5f5;color:#800000}
+.sidebar-link.active{background:#800000;color:#fff}
+.sidebar-link i{font-size:18px}
+.main-wrap{margin-left:240px;display:flex;flex-direction:column;min-height:100vh}
+/* Navbar */
+.navbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 24px;height:60px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:30}
+/* Cards */
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+/* Buttons */
+.btn{border:none;padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:#800000;color:#fff}.btn-p:hover{background:#5a0000;transform:translateY(-1px)}
+.btn-s{background:#fff;color:#800000;border:2px solid #800000}.btn-s:hover{background:#fff5f5}
+.btn-d{background:#dc2626;color:#fff}.btn-d:hover{background:#b91c1c}
+.btn-g{background:#f3f4f6;color:#374151;border:1px solid #e5e7eb}.btn-g:hover{background:#e5e7eb}
+/* Input */
+.inp{width:100%;padding:9px 13px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;color:#1a1a1a;outline:none;transition:border-color .18s}
+.inp:focus{border-color:#800000;box-shadow:0 0 0 3px rgba(128,0,0,.1)}
+select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236b7280' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:34px}
+/* Badge */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:16px;padding:28px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.18);animation:toastIn .3s ease}
+@keyframes toastIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* Animations */
+.fade-in{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:11px 16px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #f3f4f6}
+td{padding:12px 16px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#374151;vertical-align:middle}
+tr:hover td{background:#fafafa}
+/* Responsive */
+.hamburger{display:none}
+.overlay{display:none}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main-wrap{margin-left:0}
+  .hamburger{display:flex}
+  .overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40}
+  .stat-grid{grid-template-columns:1fr 1fr !important}
+  .dash-grid{grid-template-columns:1fr !important}
+  .ann-grid{grid-template-columns:1fr !important}
+  .cal-panel{display:none}
+  .admin-tabs{flex-direction:column}
+  .form-row{grid-template-columns:1fr !important}
+}
+@media(max-width:480px){.stat-grid{grid-template-columns:1fr !important}}
+/* Clamp */
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* Calendar cells */
+.cal-cell{min-height:70px;padding:6px 4px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.cal-cell:hover{background:#f9fafb}
+.cal-cell.today{border-color:#800000;background:#fff8f8}
+.cal-cell.selected{border-color:#800000;background:#fff0f0}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ── MOCK DATA ────────────────────────────────────────────── */
+const USERS = [
+  { id:1, username:'admin',   password:'admin123',   role:'admin',   name:'Administrator',     initials:'AD' },
+  { id:2, username:'student', password:'student123', role:'student', name:'Juan dela Cruz',    initials:'JD' },
+  { id:3, username:'faculty', password:'faculty123', role:'faculty', name:'Prof. Maria Santos',initials:'MS' },
+];
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const ECATS  = ['Academic','Sports','Meetings','School Holiday'];
+const ACATS  = ['General','Academic','Urgent'];
+const TODAY  = new Date(2026, 4, 22); // May 22, 2026
+
+let _evId = 20, _anId = 20;
+const INIT_EVENTS = [
+  {id:1,title:'Foundation Day Celebration',date:'2026-05-25',time:'08:00',endTime:'17:00',location:'Main Campus Grounds',category:'Academic',description:'The Lyceum of Aparri celebrates its annual Foundation Day with a day-long program featuring cultural presentations, academic recognition, and community festivities.\n\nAll students, faculty, and staff are encouraged to participate in the parades, departmental exhibits, and evening programs. Attendance is required for all enrolled students.',status:'Published'},
+  {id:2,title:'Intramural Sports Opening Ceremony',date:'2026-05-28',time:'07:00',endTime:'12:00',location:'School Gymnasium',category:'Sports',description:'Opening ceremony for the annual Intramural Sports Week. Students from all departments will compete in basketball, volleyball, badminton, table tennis, and track & field events throughout the week.\n\nStudents who wish to join must register at the Sports Coordinator\'s Office before May 24.',status:'Published'},
+  {id:3,title:'Faculty-Student Forum',date:'2026-06-02',time:'13:00',endTime:'16:00',location:'Auditorium',category:'Meetings',description:'A forum open to all faculty members and student representatives to discuss academic policies, campus concerns, and upcoming school programs.\n\nAll department heads are required to attend. Students may send representatives through their respective student councils.',status:'Published'},
+  {id:4,title:'Independence Day Celebration',date:'2026-06-12',time:'08:00',endTime:'12:00',location:'Main Campus',category:'School Holiday',description:'National holiday celebration. No classes on this date. A flag ceremony will be held at 8:00 AM followed by a short patriotic program.\n\nAdministrative offices will operate on a skeletal workforce. Students are encouraged to observe the holiday with patriotic activities.',status:'Published'},
+  {id:5,title:'First Semester Enrollment',date:'2026-06-15',time:'08:00',endTime:'17:00',location:"Registrar's Office",category:'Academic',description:'Enrollment period for the first semester of Academic Year 2026-2027. Please prepare the following requirements:\n\n• Original Report Card (Form 138)\n• Certificate of Good Moral Character\n• 2x2 ID Photos (4 copies)\n• PSA Birth Certificate\n\nEnrollment will run June 15–19, 2026 from 8:00 AM to 5:00 PM.',status:'Published'},
+  {id:6,title:'Basketball Tournament Finals',date:'2026-06-08',time:'14:00',endTime:'18:00',location:'School Gymnasium',category:'Sports',description:'Championship game of the intramural basketball tournament. Come and cheer for your department team! Admission is free for all students with a valid school ID.\n\nRefreshments will be available. The awarding ceremony follows immediately after the final game.',status:'Published'},
+  {id:7,title:'Academic Board Meeting',date:'2026-06-10',time:'09:00',endTime:'11:00',location:'Conference Room A',category:'Meetings',description:'Regular academic board meeting to discuss curriculum updates, faculty workload, and preparations for the incoming school year 2026-2027.\n\nAll department heads and academic coordinators must attend. Minutes of the previous meeting will be reviewed.',status:'Published'},
+  {id:8,title:'Rizal Day Commemoration',date:'2026-06-19',time:'08:00',endTime:'10:00',location:'School Grounds',category:'School Holiday',description:'Annual commemoration of Dr. José Rizal\'s birth anniversary with a flag ceremony, wreath-laying, and recitation of Rizal\'s works.\n\nStudents who participate in the program will receive extra credit. Wear your school uniform for this occasion.',status:'Published'},
+  {id:9,title:'First Day of Classes',date:'2026-06-22',time:'07:30',endTime:'17:00',location:'All Classrooms',category:'Academic',description:'Official start of classes for Academic Year 2026-2027. Students must report to their designated classrooms by 7:30 AM with their complete school uniform and required materials.\n\nClass schedules are available at the Registrar\'s Office. Late enrollment is not permitted.',status:'Published'},
+  {id:10,title:'Sports Fest Closing Ceremony',date:'2026-06-05',time:'15:00',endTime:'18:00',location:'School Grounds',category:'Sports',description:'Closing program and awarding ceremony for the annual Sports Fest Week. Special trophies and medals will be awarded to outstanding athletes and winning departments.\n\nRefreshments will be served. All students are welcome to attend.',status:'Published'},
+  {id:11,title:'PTA General Assembly',date:'2026-05-30',time:'09:00',endTime:'12:00',location:'Auditorium',category:'Meetings',description:'General assembly meeting for all Parents-Teachers Association members. Topics to be discussed include school policies, financial reports, and programs for the incoming school year.\n\nParents are encouraged to bring concerns and suggestions for school improvement.',status:'Published'},
+  {id:12,title:'Science and Technology Fair',date:'2026-06-25',time:'08:00',endTime:'17:00',location:'Science Building',category:'Academic',description:'Annual Science and Technology Fair where students present research projects, experiments, and technological innovations.\n\nJudging criteria include creativity, scientific method, and presentation. Winners will represent the school in the regional science fair.',status:'Published'},
+];
+
+const INIT_ANNS = [
+  {id:1,title:'Enrollment Requirements for SY 2026-2027',category:'Academic',body:'Dear Students and Parents,\n\nThe Lyceum of Aparri Registrar\'s Office announces the enrollment requirements for School Year 2026-2027. Please prepare the following documents:\n\n• Original Report Card (Form 138)\n• Certificate of Good Moral Character\n• 2x2 ID Photos (4 copies)\n• Birth Certificate (PSA copy)\n• Barangay Clearance\n\nEnrollment will be conducted from June 15–19, 2026 at the Registrar\'s Office. Office hours: 8:00 AM – 5:00 PM, Monday to Friday.\n\nFor inquiries, please visit the Registrar\'s Office or email registrar@lyceum.edu.ph.',author:"Registrar's Office",date:'2026-05-20',status:'Published'},
+  {id:2,title:'URGENT: Campus-Wide Power Interruption on May 26',category:'Urgent',body:'Please be informed that there will be a scheduled power interruption on May 26, 2026 (Tuesday) from 8:00 AM to 5:00 PM due to maintenance work by the local utility provider.\n\nAll classes on the said date will proceed as normal. Subject teachers may reschedule computer-related activities at their discretion. Students are advised to bring fully charged devices if needed.\n\nFor concerns, please contact the Office of the School Administrator.',author:'Office of the School Administrator',date:'2026-05-19',status:'Published'},
+  {id:3,title:'Foundation Day Program and Dress Code',category:'General',body:'All students, faculty, and staff are reminded of the upcoming Foundation Day Celebration on May 25, 2026.\n\nDress Code:\n• Morning Flag Ceremony & Parade: Complete School Uniform\n• Afternoon Programs: Department Colors / Costume (as announced by each department)\n• Evening Cultural Night: Smart Casual — Barong Tagalog for men, Filipiniana for women\n\nAll departments must submit their cultural presentation programs to the Student Affairs Office no later than May 22, 2026.',author:'Student Affairs Office',date:'2026-05-18',status:'Published'},
+  {id:4,title:'Scholarship Applications Now Open',category:'Academic',body:'The Office of Student Affairs is now accepting applications for the following scholarships for SY 2026-2027:\n\n1. CHED Full Scholarship — for 1st year college students, minimum grade of 90% in Senior High School\n2. LGU Scholarship — for qualified residents of Aparri, Cagayan\n3. Lyceum Academic Excellence Award — for students with General Average of 1.50 or higher\n4. DOST-SEI Scholarship — for STEM course students\n\nDeadline for submission: June 10, 2026. Bring all requirements to the Student Affairs Office, Room 101, Main Building.',author:'Student Affairs Office',date:'2026-05-15',status:'Published'},
+  {id:5,title:'Library Hours Extended During Examination Week',category:'General',body:'To support students during the upcoming examination period, the school library will extend its operating hours.\n\nExtended Library Hours (June 1–5, 2026):\n• Monday – Friday: 7:00 AM – 8:00 PM\n• Saturday: 8:00 AM – 5:00 PM\n\nQuiet study areas are available on the 2nd floor. Reference books, reviewers, and e-library access are open to all enrolled students with a valid school ID.',author:'Library Services',date:'2026-05-14',status:'Published'},
+  {id:6,title:'Official Academic Calendar SY 2026-2027 Published',category:'Academic',body:'The Office of the Registrar has released the official Academic Calendar for School Year 2026-2027.\n\nKey Dates:\n• Enrollment Period: June 15–19, 2026\n• First Day of Classes: June 22, 2026\n• Midterm Examinations: August 17–21, 2026\n• Semester Break: October 5–9, 2026\n• Final Examinations: October 19–23, 2026\n• End of 1st Semester: October 30, 2026\n• Christmas Break: December 20, 2026 – January 2, 2027\n\nThe complete academic calendar is available at the Registrar\'s Office and all school bulletin boards.',author:"Registrar's Office",date:'2026-05-10',status:'Published'},
+  {id:7,title:'Free Health & Wellness Fair on June 3',category:'General',body:'The School Clinic, in partnership with the Cagayan Provincial Health Office, will conduct a free Health and Wellness Fair on June 3, 2026 at the School Gymnasium.\n\nFree services available:\n• Blood Pressure and Blood Sugar Testing\n• Dental Check-up and Free Oral Prophylaxis\n• Vision Screening and Referrals\n• Free Vitamins and Supplements Distribution\n• Mental Health and Wellness Talk (10:00 AM – 11:00 AM)\n\nAll students, faculty, and staff are encouraged to attend. Registration starts at 8:00 AM.',author:'School Clinic',date:'2026-05-08',status:'Published'},
+  {id:8,title:'URGENT: Anti-Bullying Policy Reminder',category:'Urgent',body:'The school administration reminds all members of the Lyceum community of the strictly enforced Anti-Bullying Policy under Republic Act 10627 (Anti-Bullying Act of 2013).\n\nZero tolerance for any form of bullying, including:\n• Physical bullying\n• Verbal and psychological bullying\n• Cyberbullying (online harassment, body shaming, hate speech)\n\nViolators will face suspension, exclusion, or expulsion depending on the severity of the offense.\n\nTo report: Visit the Guidance Office (Room 105) or any faculty member. All reports are treated with strict confidentiality.',author:'Office of the School Administrator',date:'2026-05-05',status:'Published'},
+];
+
+/* ── HELPERS ─────────────────────────────────────────────── */
+const fmt = d => new Date(d+'T00:00:00').toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'});
+const fmtT = t => { const [h,m]=t.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
+const cat  = c => ({
+  Academic:     {bg:'#dbeafe',color:'#1e40af'},
+  Sports:       {bg:'#dcfce7',color:'#166534'},
+  Meetings:     {bg:'#fef9c3',color:'#854d0e'},
+  'School Holiday':{bg:'#fce7f3',color:'#9d174d'},
+  General:      {bg:'#f3f4f6',color:'#374151'},
+  Urgent:       {bg:'#fee2e2',color:'#991b1b'},
+}[c]||{bg:'#f3f4f6',color:'#374151'});
+
+/* ── ROOT APP ─────────────────────────────────────────────── */
+function App() {
+  const [user,  setUser]  = useState(null);
+  const [page,  setPage]  = useState('login');
+  const [pp,    setPP]    = useState({});
+  const [evs,   setEvs]   = useState(INIT_EVENTS);
+  const [anns,  setAnns]  = useState(INIT_ANNS);
+  const [sOpen, setSOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const nav = (p, params={}) => { setPage(p); setPP(params); setSOpen(false); window.scrollTo(0,0); };
+
+  const showToast = (msg, type='success') => {
+    setToast({msg,type});
+    setTimeout(()=>setToast(null), 3200);
+  };
+
+  const login = (username, password) => {
+    const u = USERS.find(u=>u.username===username && u.password===password);
+    if(u){ setUser(u); nav(u.role==='admin'?'admin':'dashboard'); return true; }
+    return false;
+  };
+
+  const logout = () => { setUser(null); nav('login'); };
+
+  const ctx = { user, evs, setEvs, anns, setAnns, nav, showToast, logout };
+
+  return (
+    <>
+      {page==='login'
+        ? <LoginPage login={login} />
+        : <Layout ctx={ctx} page={page} sOpen={sOpen} setSOpen={setSOpen}>
+            {page==='dashboard'          && <DashboardPage ctx={ctx} />}
+            {page==='calendar'           && <CalendarPage ctx={ctx} />}
+            {page==='announcements'      && <AnnouncementsPage ctx={ctx} />}
+            {page==='event-detail'       && <EventDetailPage ctx={ctx} params={pp} />}
+            {page==='ann-detail'         && <AnnDetailPage ctx={ctx} params={pp} />}
+            {page==='admin'              && <AdminPage ctx={ctx} />}
+            {page==='404'               && <NotFoundPage ctx={ctx} />}
+          </Layout>
+      }
+      {toast && (
+        <div className="toast" style={{background:toast.type==='success'?'#166534':toast.type==='error'?'#dc2626':'#1d4ed8',color:'#fff'}}>
+          <i className={`ti ${toast.type==='success'?'ti-circle-check':toast.type==='error'?'ti-alert-circle':'ti-info-circle'}`} style={{marginRight:8}}></i>
+          {toast.msg}
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ── LOGIN ────────────────────────────────────────────────── */
+function LoginPage({ login }) {
+  const [username, setUs
