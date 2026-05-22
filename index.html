@@ -191,4 +191,751 @@ function App() {
 
 /* ── LOGIN ────────────────────────────────────────────────── */
 function LoginPage({ login }) {
-  const [username, setUs
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = () => {
+    if(!username||!password){ setErr('Please fill in all fields.'); return; }
+    setLoading(true);
+    setTimeout(()=>{
+      const ok = login(username.trim(), password);
+      if(!ok){ setErr('Invalid username or password. Please try again.'); setLoading(false); }
+    }, 700);
+  };
+
+  return (
+    <div style={{minHeight:'100vh',background:'linear-gradient(160deg,#6b0000 0%,#800000 40%,#5a0000 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:24,position:'relative',overflow:'hidden'}}>
+      <div style={{position:'absolute',inset:0,opacity:.04,backgroundImage:'repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)',backgroundSize:'18px 18px'}}/>
+      <div className="card fade-in" style={{maxWidth:420,width:'100%',padding:'44px 40px',textAlign:'center',position:'relative'}}>
+        {/* Logo */}
+        <div style={{width:82,height:82,borderRadius:'50%',background:'linear-gradient(135deg,#800000,#5a0000)',margin:'0 auto 18px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 6px 24px rgba(128,0,0,.35)'}}>
+          <i className="ti ti-school" style={{fontSize:36,color:'#fff'}}></i>
+        </div>
+        <h1 className="fd" style={{fontSize:22,fontWeight:700,color:'#800000',lineHeight:1.2}}>Lyceum of Aparri</h1>
+        <p style={{fontSize:13,color:'#6b7280',marginTop:4,marginBottom:32}}>Event Calendar &amp; Announcement System</p>
+
+        <div style={{textAlign:'left',display:'flex',flexDirection:'column',gap:14}}>
+          <div>
+            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Username</label>
+            <input className="inp" value={username} onChange={e=>{setUsername(e.target.value);setErr('');}} onKeyDown={e=>e.key==='Enter'&&handleLogin()} placeholder="Enter your username"/>
+          </div>
+          <div>
+            <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>Password</label>
+            <input className="inp" type="password" value={password} onChange={e=>{setPassword(e.target.value);setErr('');}} onKeyDown={e=>e.key==='Enter'&&handleLogin()} placeholder="Enter your password"/>
+          </div>
+          {err && <div style={{background:'#fee2e2',color:'#991b1b',padding:'10px 14px',borderRadius:8,fontSize:13,display:'flex',alignItems:'center',gap:8}}>
+            <i className="ti ti-alert-triangle"></i>{err}
+          </div>}
+          <button className="btn btn-p" style={{width:'100%',justifyContent:'center',padding:'12px',fontSize:15,marginTop:4}} onClick={handleLogin} disabled={loading}>
+            {loading ? <><i className="ti ti-loader-2" style={{animation:'spin 1s linear infinite'}}></i> Signing in…</> : <><i className="ti ti-login"></i> Log In</>}
+          </button>
+          <div style={{textAlign:'center'}}>
+            <span style={{fontSize:13,color:'#800000',fontWeight:600,cursor:'pointer'}}>Forgot Password?</span>
+          </div>
+        </div>
+
+        <div style={{marginTop:24,padding:'14px',background:'#f9fafb',borderRadius:10,fontSize:12,color:'#6b7280',textAlign:'left',border:'1px solid #e5e7eb'}}>
+          <div style={{fontWeight:700,marginBottom:6,color:'#374151',fontSize:12}}>Demo Credentials</div>
+          <div style={{display:'flex',flexDirection:'column',gap:3}}>
+            <div>Admin: <strong style={{color:'#1a1a1a'}}>admin</strong> / <strong style={{color:'#1a1a1a'}}>admin123</strong></div>
+            <div>Student: <strong style={{color:'#1a1a1a'}}>student</strong> / <strong style={{color:'#1a1a1a'}}>student123</strong></div>
+            <div>Faculty: <strong style={{color:'#1a1a1a'}}>faculty</strong> / <strong style={{color:'#1a1a1a'}}>faculty123</strong></div>
+          </div>
+        </div>
+      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+}
+
+/* ── LAYOUT ───────────────────────────────────────────────── */
+function Layout({ ctx, page, sOpen, setSOpen, children }) {
+  const { user, nav, logout } = ctx;
+  const [uMenu, setUMenu] = useState(false);
+
+  const navItems = [
+    { id:'dashboard',     label:'Dashboard',      icon:'ti-layout-dashboard' },
+    { id:'calendar',      label:'Calendar',        icon:'ti-calendar' },
+    { id:'announcements', label:'Announcements',   icon:'ti-bell' },
+    ...(user?.role==='admin' ? [{id:'admin', label:'Admin Panel', icon:'ti-shield-lock'}] : []),
+  ];
+
+  const isActive = id => page===id || (id==='admin' && page==='admin');
+
+  return (
+    <div>
+      <div className={`overlay${sOpen?' show':''}`} onClick={()=>setSOpen(false)}/>
+
+      {/* Sidebar */}
+      <aside className={`sidebar${sOpen?' open':''}`}>
+        <div style={{padding:'18px 16px',borderBottom:'1px solid #f3f4f6',display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:34,height:34,borderRadius:9,background:'linear-gradient(135deg,#800000,#5a0000)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <i className="ti ti-school" style={{color:'#fff',fontSize:17}}></i>
+          </div>
+          <div>
+            <div className="fd" style={{fontSize:13,fontWeight:700,color:'#1a1a1a',lineHeight:1.1}}>Lyceum</div>
+            <div style={{fontSize:11,color:'#6b7280'}}>of Aparri</div>
+          </div>
+          <button onClick={()=>setSOpen(false)} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'#9ca3af',display:'none'}} className="hamburger">
+            <i className="ti ti-x" style={{fontSize:18}}></i>
+          </button>
+        </div>
+
+        <nav style={{flex:1,padding:'14px 10px',display:'flex',flexDirection:'column',gap:3,overflowY:'auto'}}>
+          {navItems.map(n=>(
+            <div key={n.id} className={`sidebar-link${isActive(n.id)?' active':''}`} onClick={()=>nav(n.id)}>
+              <i className={`ti ${n.icon}`}></i><span>{n.label}</span>
+            </div>
+          ))}
+        </nav>
+
+        <div style={{padding:'10px',borderTop:'1px solid #f3f4f6'}}>
+          <div className="sidebar-link" onClick={logout} style={{color:'#dc2626'}}>
+            <i className="ti ti-logout"></i><span>Logout</span>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="main-wrap">
+        <header className="navbar">
+          <button className="btn btn-g hamburger" style={{padding:'7px 10px'}} onClick={()=>setSOpen(true)}>
+            <i className="ti ti-menu-2" style={{fontSize:20}}></i>
+          </button>
+          <div className="fd" style={{fontWeight:600,fontSize:16,flex:1,color:'#1a1a1a'}}>
+            {{dashboard:'Dashboard',calendar:'Event Calendar',announcements:'Announcements',admin:'Admin Panel','event-detail':'Event Details','ann-detail':'Announcement'}[page]||'Lyceum of Aparri'}
+          </div>
+          <div style={{position:'relative'}}>
+            <div onClick={()=>setUMenu(!uMenu)} style={{display:'flex',alignItems:'center',gap:9,cursor:'pointer',padding:'6px 12px',borderRadius:8,border:'1px solid #e5e7eb',background:'#fff',transition:'background .15s'}} onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
+              <div style={{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg,#800000,#a00000)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:12,fontWeight:700}}>
+                {user?.initials}
+              </div>
+              <div style={{display:'flex',flexDirection:'column',lineHeight:1.2}}>
+                <span style={{fontSize:13,fontWeight:600,color:'#1a1a1a'}}>{user?.name.split(' ')[0]} {user?.name.split(' ').slice(-1)[0]}</span>
+                <span style={{fontSize:11,color:'#6b7280',textTransform:'capitalize'}}>{user?.role}</span>
+              </div>
+              <i className="ti ti-chevron-down" style={{fontSize:14,color:'#9ca3af'}}></i>
+            </div>
+            {uMenu && (
+              <div style={{position:'absolute',right:0,top:'calc(100% + 8px)',background:'#fff',border:'1px solid #e5e7eb',borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,.1)',minWidth:180,zIndex:60}} onClick={()=>setUMenu(false)}>
+                <div style={{padding:'10px 16px',borderBottom:'1px solid #f3f4f6',fontSize:12,color:'#6b7280'}}>Signed in as <strong style={{color:'#1a1a1a'}}>{user?.username}</strong></div>
+                <div onClick={logout} style={{padding:'10px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:8,fontSize:14,color:'#dc2626',fontWeight:600}} onMouseEnter={e=>e.currentTarget.style.background='#fff5f5'} onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
+                  <i className="ti ti-logout" style={{fontSize:16}}></i> Logout
+                </div>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <main className="fade-in" style={{flex:1,padding:'24px',maxWidth:1180,width:'100%',margin:'0 auto'}}>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/* ── DASHBOARD ────────────────────────────────────────────── */
+function DashboardPage({ ctx }) {
+  const { evs, anns, nav, user } = ctx;
+  const now = TODAY;
+  const upcoming = evs.filter(e=>new Date(e.date+'T00:00:00')>=now&&e.status==='Published').sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const thisWeek = upcoming.filter(e=>(new Date(e.date+'T00:00:00')-now)/(864e5)<=7);
+  const thisMonth = upcoming.filter(e=>{ const d=new Date(e.date+'T00:00:00'); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear(); });
+  const recAnns = [...anns].filter(a=>a.status==='Published').sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
+
+  const StatCard = ({ label, val, icon, bg, col }) => (
+    <div className="card" style={{padding:'20px 22px',display:'flex',alignItems:'center',gap:14}}>
+      <div style={{width:46,height:46,borderRadius:12,background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+        <i className={`ti ${icon}`} style={{fontSize:22,color:col}}></i>
+      </div>
+      <div>
+        <div className="fd" style={{fontSize:27,fontWeight:700,color:'#1a1a1a',lineHeight:1}}>{val}</div>
+        <div style={{fontSize:13,color:'#6b7280',marginTop:3}}>{label}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:26}}>
+      <div>
+        <h1 className="fd" style={{fontSize:26,fontWeight:700,color:'#1a1a1a'}}>Welcome back, {user?.name.split(' ')[0]}! 👋</h1>
+        <p style={{color:'#6b7280',fontSize:14,marginTop:4}}>Here's what's happening at Lyceum of Aparri.</p>
+      </div>
+
+      <div className="stat-grid" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
+        <StatCard label="Upcoming Events"     val={upcoming.length}  icon="ti-calendar"        bg="#fee2e2" col="#800000"/>
+        <StatCard label="Total Announcements" val={anns.filter(a=>a.status==='Published').length} icon="ti-bell" bg="#dbeafe" col="#2563eb"/>
+        <StatCard label="Events This Week"    val={thisWeek.length}  icon="ti-clock"           bg="#dcfce7" col="#059669"/>
+        <StatCard label="Events This Month"   val={thisMonth.length} icon="ti-calendar-event"  bg="#fef9c3" col="#d97706"/>
+      </div>
+
+      <div className="dash-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:22}}>
+        {/* Upcoming Events */}
+        <div className="card" style={{padding:22}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+            <h2 className="fd" style={{fontSize:18,fontWeight:600}}>Upcoming Events</h2>
+            <button className="btn btn-g" style={{fontSize:13,padding:'5px 12px'}} onClick={()=>nav('calendar')}>View Calendar →</button>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {upcoming.slice(0,5).map(ev=>{
+              const d=new Date(ev.date+'T00:00:00'); const cs=cat(ev.category);
+              return (
+                <div key={ev.id} onClick={()=>nav('event-detail',{id:ev.id})} style={{display:'flex',gap:12,cursor:'pointer',padding:'11px',borderRadius:10,border:'1px solid #f3f4f6',transition:'all .18s'}} onMouseEnter={e=>e.currentTarget.style.borderColor='#800000'} onMouseLeave={e=>e.currentTarget.style.borderColor='#f3f4f6'}>
+                  <div style={{width:42,flexShrink:0,textAlign:'center'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:'#800000',textTransform:'uppercase',letterSpacing:'.05em'}}>{MONTHS[d.getMonth()].slice(0,3)}</div>
+                    <div className="fd" style={{fontSize:22,fontWeight:700,color:'#1a1a1a',lineHeight:1}}>{d.getDate()}</div>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:600,color:'#1a1a1a',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ev.title}</div>
+                    <div style={{fontSize:12,color:'#6b7280',marginTop:2}}>{fmtT(ev.time)} · {ev.location}</div>
+                    <span className="badge" style={{...cs,fontSize:11,marginTop:5}}>{ev.category}</span>
+                  </div>
+                </div>
+              );
+            })}
+            {upcoming.length===0 && <EmptyState icon="ti-calendar-off" msg="No upcoming events"/>}
+          </div>
+        </div>
+
+        {/* Recent Announcements */}
+        <div className="card" style={{padding:22}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+            <h2 className="fd" style={{fontSize:18,fontWeight:600}}>Recent Announcements</h2>
+            <button className="btn btn-g" style={{fontSize:13,padding:'5px 12px'}} onClick={()=>nav('announcements')}>View All →</button>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            {recAnns.map(ann=>{
+              const cs=cat(ann.category);
+              return (
+                <div key={ann.id} onClick={()=>nav('ann-detail',{id:ann.id})} style={{padding:'13px',borderRadius:10,border:'1px solid #f3f4f6',cursor:'pointer',transition:'all .18s'}} onMouseEnter={e=>e.currentTarget.style.borderColor='#800000'} onMouseLeave={e=>e.currentTarget.style.borderColor='#f3f4f6'}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8,marginBottom:6}}>
+                    <span className="badge" style={{...cs,fontSize:11}}>{ann.category}</span>
+                    <span style={{fontSize:11,color:'#9ca3af',flexShrink:0}}>{fmt(ann.date)}</span>
+                  </div>
+                  <div style={{fontSize:14,fontWeight:600,color:'#1a1a1a',marginBottom:4}}>{ann.title}</div>
+                  <div className="clamp2" style={{fontSize:13,color:'#6b7280'}}>{ann.body.split('\n')[0]}</div>
+                </div>
+              );
+            })}
+            {recAnns.length===0 && <EmptyState icon="ti-bell-off" msg="No announcements yet"/>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── CALENDAR ─────────────────────────────────────────────── */
+function CalendarPage({ ctx }) {
+  const { evs, nav, user } = ctx;
+  const [year, setYear]   = useState(2026);
+  const [month, setMonth] = useState(4);
+  const [sel, setSel]     = useState(null);
+  const [filter, setFil]  = useState('All');
+
+  const prevM = ()=>{ if(month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1); setSel(null); };
+  const nextM = ()=>{ if(month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1); setSel(null); };
+
+  const firstDay = new Date(year,month,1).getDay();
+  const daysInM  = new Date(year,month+1,0).getDate();
+
+  const filtered = evs.filter(e=>{
+    const d=new Date(e.date+'T00:00:00');
+    if(d.getFullYear()!==year||d.getMonth()!==month) return false;
+    if(filter!=='All'&&e.category!==filter) return false;
+    return e.status==='Published';
+  });
+
+  const onDay = day => filtered.filter(e=>new Date(e.date+'T00:00:00').getDate()===day);
+  const isToday = day => day===TODAY.getDate()&&month===TODAY.getMonth()&&year===TODAY.getFullYear();
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:22}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <h1 className="fd" style={{fontSize:26,fontWeight:700}}>Event Calendar</h1>
+        {user?.role==='admin' && (
+          <button className="btn btn-p" onClick={()=>nav('admin')}><i className="ti ti-plus"></i> Add Event</button>
+        )}
+      </div>
+
+      {/* Filter bar */}
+      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+        {['All',...ECATS].map(f=>(
+          <button key={f} onClick={()=>setFil(f)} style={{padding:'6px 15px',borderRadius:20,border:`1.5px solid ${filter===f?'#800000':'#e5e7eb'}`,background:filter===f?'#800000':'#fff',color:filter===f?'#fff':'#6b7280',fontWeight:filter===f?600:400,fontSize:13,cursor:'pointer',transition:'all .18s',fontFamily:"'DM Sans',sans-serif"}}>{f}</button>
+        ))}
+      </div>
+
+      <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
+        {/* Calendar grid */}
+        <div className="card" style={{flex:1,padding:20}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+            <button onClick={prevM} style={{width:34,height:34,borderRadius:8,border:'1px solid #e5e7eb',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>‹</button>
+            <h2 className="fd" style={{fontSize:19,fontWeight:600}}>{MONTHS[month]} {year}</h2>
+            <button onClick={nextM} style={{width:34,height:34,borderRadius:8,border:'1px solid #e5e7eb',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}}>›</button>
+          </div>
+          {/* Day headers */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:6}}>
+            {DAYS.map(d=>(
+              <div key={d} style={{textAlign:'center',fontSize:11,fontWeight:700,color:'#6b7280',padding:'4px 0',textTransform:'uppercase',letterSpacing:'.06em'}}>{d}</div>
+            ))}
+          </div>
+          {/* Cells */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2}}>
+            {Array.from({length:firstDay}).map((_,i)=><div key={`b${i}`}/>)}
+            {Array.from({length:daysInM}).map((_,i)=>{
+              const day=i+1; const dayEvs=onDay(day); const today=isToday(day); const selected=sel===day;
+              return (
+                <div key={day} className={`cal-cell${today?' today':''}${selected?' selected':''}`} onClick={()=>setSel(sel===day?null:day)}>
+                  <div style={{fontSize:13,fontWeight:today?700:500,color:today?'#800000':'#1a1a1a',textAlign:'center',marginBottom:3}}>{day}</div>
+                  {dayEvs.slice(0,2).map(ev=>{
+                    const cs=cat(ev.category);
+                    return <div key={ev.id} style={{fontSize:10,background:cs.bg,color:cs.color,padding:'1px 4px',borderRadius:3,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginBottom:1}}>{ev.title}</div>;
+                  })}
+                  {dayEvs.length>2 && <div style={{fontSize:10,color:'#9ca3af',textAlign:'center'}}>+{dayEvs.length-2}</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Side panel */}
+        {sel && (
+          <div className="card cal-panel fade-in" style={{width:280,padding:18,alignSelf:'flex-start',flexShrink:0}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+              <h3 className="fd" style={{fontSize:15,fontWeight:600}}>{MONTHS[month]} {sel}, {year}</h3>
+              <button onClick={()=>setSel(null)} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',fontSize:16}}>✕</button>
+            </div>
+            {onDay(sel).length===0
+              ? <div style={{textAlign:'center',padding:'20px 0',color:'#9ca3af',fontSize:13}}>No events on this day</div>
+              : onDay(sel).map(ev=>{
+                const cs=cat(ev.category);
+                return (
+                  <div key={ev.id} onClick={()=>nav('event-detail',{id:ev.id})} style={{padding:'11px',borderRadius:9,border:'1px solid #f3f4f6',cursor:'pointer',marginBottom:10,transition:'border-color .18s'}} onMouseEnter={e=>e.currentTarget.style.borderColor='#800000'} onMouseLeave={e=>e.currentTarget.style.borderColor='#f3f4f6'}>
+                    <span className="badge" style={{...cs,fontSize:11,marginBottom:7,display:'inline-block'}}>{ev.category}</span>
+                    <div style={{fontSize:13,fontWeight:600,color:'#1a1a1a',marginBottom:5}}>{ev.title}</div>
+                    <div style={{fontSize:12,color:'#6b7280',display:'flex',alignItems:'center',gap:4,marginBottom:2}}><i className="ti ti-clock" style={{fontSize:13}}></i>{fmtT(ev.time)}–{fmtT(ev.endTime)}</div>
+                    <div style={{fontSize:12,color:'#6b7280',display:'flex',alignItems:'center',gap:4}}><i className="ti ti-map-pin" style={{fontSize:13}}></i>{ev.location}</div>
+                  </div>
+                );
+              })
+            }
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── ANNOUNCEMENTS ────────────────────────────────────────── */
+function AnnouncementsPage({ ctx }) {
+  const { anns, nav } = ctx;
+  const [tab,   setTab]   = useState('All');
+  const [search,setSearch]= useState('');
+  const [pg,    setPg]    = useState(1);
+  const PER = 6;
+
+  const filtered = anns.filter(a=>{
+    if(a.status!=='Published') return false;
+    if(tab!=='All'&&a.category!==tab) return false;
+    if(search&&!a.title.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  const paged = filtered.slice((pg-1)*PER, pg*PER);
+  const totalPgs = Math.ceil(filtered.length/PER);
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:22}}>
+      <h1 className="fd" style={{fontSize:26,fontWeight:700}}>Announcements</h1>
+
+      <div style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+        <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+          {['All',...ACATS].map(t=>(
+            <button key={t} onClick={()=>{setTab(t);setPg(1);}} style={{padding:'6px 15px',borderRadius:20,border:`1.5px solid ${tab===t?'#800000':'#e5e7eb'}`,background:tab===t?'#800000':'#fff',color:tab===t?'#fff':'#6b7280',fontWeight:tab===t?600:400,fontSize:13,cursor:'pointer',transition:'all .18s',fontFamily:"'DM Sans',sans-serif"}}>{t}</button>
+          ))}
+        </div>
+        <div style={{marginLeft:'auto',position:'relative'}}>
+          <i className="ti ti-search" style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',fontSize:15,color:'#9ca3af'}}></i>
+          <input className="inp" value={search} onChange={e=>{setSearch(e.target.value);setPg(1);}} placeholder="Search announcements…" style={{paddingLeft:34,width:230}}/>
+        </div>
+      </div>
+
+      {paged.length===0
+        ? <div className="card" style={{padding:'60px',textAlign:'center'}}>
+            <EmptyState icon="ti-bell-off" msg="No announcements found. Try adjusting your filters."/>
+          </div>
+        : <div className="ann-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:18}}>
+            {paged.map(ann=>{
+              const cs=cat(ann.category);
+              return (
+                <div key={ann.id} className="card" style={{padding:22,display:'flex',flexDirection:'column',gap:10,cursor:'pointer',border:'2px solid transparent',transition:'all .18s'}} onClick={()=>nav('ann-detail',{id:ann.id})} onMouseEnter={e=>{e.currentTarget.style.borderColor='#800000';e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 8px 28px rgba(0,0,0,.09)';}} onMouseLeave={e=>{e.currentTarget.style.borderColor='transparent';e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='';}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8}}>
+                    <span className="badge" style={{...cs}}>{ann.category}</span>
+                    <span style={{fontSize:11,color:'#9ca3af',flexShrink:0,whiteSpace:'nowrap'}}>{fmt(ann.date)}</span>
+                  </div>
+                  <div className="fd" style={{fontSize:16,fontWeight:600,color:'#1a1a1a',lineHeight:1.4}}>{ann.title}</div>
+                  <div className="clamp3" style={{fontSize:13,color:'#6b7280',lineHeight:1.6}}>{ann.body.split('\n')[0]}</div>
+                  <div style={{fontSize:12,color:'#6b7280',marginTop:'auto',paddingTop:4}}>By <strong style={{color:'#374151'}}>{ann.author}</strong></div>
+                  <div style={{fontSize:13,color:'#800000',fontWeight:600}}>Read More →</div>
+                </div>
+              );
+            })}
+          </div>
+      }
+
+      {totalPgs>1 && (
+        <div style={{display:'flex',justifyContent:'center',gap:8}}>
+          {Array.from({length:totalPgs},(_,i)=>i+1).map(p=>(
+            <button key={p} onClick={()=>setPg(p)} style={{width:34,height:34,borderRadius:8,border:`1.5px solid ${pg===p?'#800000':'#e5e7eb'}`,background:pg===p?'#800000':'#fff',color:pg===p?'#fff':'#6b7280',fontWeight:600,cursor:'pointer',fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>{p}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── EVENT DETAIL ─────────────────────────────────────────── */
+function EventDetailPage({ ctx, params }) {
+  const { evs, nav } = ctx;
+  const ev = evs.find(e=>e.id===params.id);
+  if(!ev) return <NotFoundPage ctx={ctx}/>;
+  const cs = cat(ev.category);
+  const related = evs.filter(e=>e.id!==ev.id&&e.category===ev.category&&e.status==='Published').slice(0,3);
+
+  return (
+    <div style={{maxWidth:820,margin:'0 auto'}}>
+      <button onClick={()=>nav('calendar')} style={{display:'flex',alignItems:'center',gap:7,color:'#6b7280',background:'none',border:'none',cursor:'pointer',fontSize:14,fontWeight:500,marginBottom:20}}>
+        <i className="ti ti-arrow-left" style={{fontSize:17}}></i> Back to Calendar
+      </button>
+
+      <div className="card" style={{padding:'36px',marginBottom:22}}>
+        <span className="badge" style={{...cs,marginBottom:14,display:'inline-block'}}>{ev.category}</span>
+        <h1 className="fd" style={{fontSize:28,fontWeight:700,color:'#1a1a1a',marginBottom:22,lineHeight:1.3}}>{ev.title}</h1>
+
+        <div style={{display:'flex',flexWrap:'wrap',gap:18,marginBottom:28,padding:'18px',background:'#f9fafb',borderRadius:12}}>
+          <MetaItem icon="ti-calendar" label="Date"     val={fmt(ev.date)}                     bg="#fee2e2" ic="#800000"/>
+          <MetaItem icon="ti-clock"    label="Time"     val={`${fmtT(ev.time)} – ${fmtT(ev.endTime)}`} bg="#dbeafe" ic="#2563eb"/>
+          <MetaItem icon="ti-map-pin"  label="Location" val={ev.location}                      bg="#dcfce7" ic="#059669"/>
+        </div>
+
+        <div style={{fontSize:15,color:'#374151',lineHeight:1.9,whiteSpace:'pre-wrap'}}>{ev.description}</div>
+      </div>
+
+      {related.length>0 && (
+        <div>
+          <h2 className="fd" style={{fontSize:18,fontWeight:600,marginBottom:14}}>Related Events</h2>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:14}}>
+            {related.map(r=>{
+              const rcs=cat(r.category); const rd=new Date(r.date+'T00:00:00');
+              return (
+                <div key={r.id} onClick={()=>nav('event-detail',{id:r.id})} className="card" style={{padding:'16px',cursor:'pointer',border:'2px solid transparent',transition:'all .18s'}} onMouseEnter={e=>e.currentTarget.style.borderColor='#800000'} onMouseLeave={e=>e.currentTarget.style.borderColor='transparent'}>
+                  <span className="badge" style={{...rcs,fontSize:11,marginBottom:8,display:'inline-block'}}>{r.category}</span>
+                  <div style={{fontSize:14,fontWeight:600,color:'#1a1a1a',marginBottom:4}}>{r.title}</div>
+                  <div style={{fontSize:12,color:'#6b7280'}}>{MONTHS[rd.getMonth()].slice(0,3)} {rd.getDate()}, {rd.getFullYear()}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── ANN DETAIL ───────────────────────────────────────────── */
+function AnnDetailPage({ ctx, params }) {
+  const { anns, nav } = ctx;
+  const ann = anns.find(a=>a.id===params.id);
+  if(!ann) return <NotFoundPage ctx={ctx}/>;
+  const cs = cat(ann.category);
+
+  return (
+    <div style={{maxWidth:820,margin:'0 auto'}}>
+      <button onClick={()=>nav('announcements')} style={{display:'flex',alignItems:'center',gap:7,color:'#6b7280',background:'none',border:'none',cursor:'pointer',fontSize:14,fontWeight:500,marginBottom:20}}>
+        <i className="ti ti-arrow-left" style={{fontSize:17}}></i> Back to Announcements
+      </button>
+
+      <div className="card" style={{padding:'36px'}}>
+        <span className="badge" style={{...cs,marginBottom:14,display:'inline-block'}}>{ann.category}</span>
+        <h1 className="fd" style={{fontSize:26,fontWeight:700,color:'#1a1a1a',marginBottom:16,lineHeight:1.3}}>{ann.title}</h1>
+
+        <div style={{display:'flex',alignItems:'center',gap:14,padding:'14px 0',borderTop:'1px solid #f3f4f6',borderBottom:'1px solid #f3f4f6',marginBottom:28}}>
+          <div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#800000,#a00000)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:14,fontWeight:700,flexShrink:0}}>{ann.author[0]}</div>
+          <div>
+            <div style={{fontSize:14,fontWeight:600,color:'#1a1a1a'}}>{ann.author}</div>
+            <div style={{fontSize:12,color:'#6b7280'}}>Posted on {fmt(ann.date)}</div>
+          </div>
+        </div>
+
+        <div style={{fontSize:15,color:'#374151',lineHeight:1.9,whiteSpace:'pre-wrap'}}>{ann.body}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── ADMIN PANEL ──────────────────────────────────────────── */
+function AdminPage({ ctx }) {
+  const { user, evs, setEvs, anns, setAnns, showToast } = ctx;
+  const [tab,    setTab]    = useState('events');
+  const [evForm, setEvForm] = useState(null);
+  const [anForm, setAnForm] = useState(null);
+  const [delModal,setDelModal] = useState(null);
+
+  if(user?.role!=='admin') return (
+    <div style={{textAlign:'center',padding:'80px 24px'}}>
+      <i className="ti ti-shield-off" style={{fontSize:56,color:'#d1d5db',display:'block',marginBottom:16}}></i>
+      <h2 className="fd" style={{fontSize:22,fontWeight:600,marginBottom:8}}>Access Denied</h2>
+      <p style={{color:'#6b7280',fontSize:14}}>You don't have permission to view this page.</p>
+    </div>
+  );
+
+  const confirmDelete = () => {
+    if(delModal.type==='event'){ setEvs(e=>e.filter(x=>x.id!==delModal.id)); showToast('Event deleted.','success'); }
+    else { setAnns(a=>a.filter(x=>x.id!==delModal.id)); showToast('Announcement deleted.','success'); }
+    setDelModal(null);
+  };
+
+  const saveEvent = f => {
+    if(!f.title||!f.date||!f.location){ showToast('Fill in all required fields.','error'); return; }
+    if(f.id){ setEvs(e=>e.map(x=>x.id===f.id?f:x)); showToast('Event updated!'); }
+    else { setEvs(e=>[...e,{...f,id:Date.now()}]); showToast('Event added!'); }
+    setEvForm(null);
+  };
+
+  const saveAnn = f => {
+    if(!f.title||!f.body||!f.author){ showToast('Fill in all required fields.','error'); return; }
+    if(f.id){ setAnns(a=>a.map(x=>x.id===f.id?f:x)); showToast('Announcement updated!'); }
+    else { setAnns(a=>[...a,{...f,id:Date.now()}]); showToast('Announcement added!'); }
+    setAnForm(null);
+  };
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:22}}>
+      <div>
+        <h1 className="fd" style={{fontSize:26,fontWeight:700}}>Admin Panel</h1>
+        <p style={{color:'#6b7280',fontSize:14,marginTop:4}}>Manage school events and announcements.</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="admin-tabs" style={{display:'flex',gap:4,background:'#f3f4f6',padding:4,borderRadius:10,width:'fit-content'}}>
+        {[['events','ti-calendar','Events'],['announcements','ti-bell','Announcements']].map(([id,ic,lb])=>(
+          <button key={id} onClick={()=>setTab(id)} style={{display:'flex',alignItems:'center',gap:7,padding:'8px 20px',borderRadius:8,border:'none',background:tab===id?'#fff':'transparent',color:tab===id?'#800000':'#6b7280',fontWeight:tab===id?600:400,fontSize:14,cursor:'pointer',boxShadow:tab===id?'0 1px 3px rgba(0,0,0,.1)':'none',transition:'all .18s',fontFamily:"'DM Sans',sans-serif"}}>
+            <i className={`ti ${ic}`} style={{fontSize:16}}></i>{lb}
+          </button>
+        ))}
+      </div>
+
+      {tab==='events' && (
+        <>
+          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            <button className="btn btn-p" onClick={()=>setEvForm({title:'',date:'',time:'08:00',endTime:'17:00',location:'',category:'Academic',description:'',status:'Published'})}>
+              <i className="ti ti-plus"></i> Add Event
+            </button>
+          </div>
+          <div className="card" style={{overflow:'hidden'}}>
+            <div style={{overflowX:'auto'}}>
+              <table>
+                <thead><tr><th>Title</th><th>Date</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {[...evs].sort((a,b)=>new Date(a.date)-new Date(b.date)).map(ev=>{
+                    const cs=cat(ev.category);
+                    return (
+                      <tr key={ev.id}>
+                        <td><div style={{fontWeight:600,color:'#1a1a1a'}}>{ev.title}</div><div style={{fontSize:12,color:'#9ca3af'}}>{ev.location}</div></td>
+                        <td style={{whiteSpace:'nowrap'}}>{fmt(ev.date)}</td>
+                        <td><span className="badge" style={{...cs}}>{ev.category}</span></td>
+                        <td><span style={{fontSize:12,fontWeight:600,color:ev.status==='Published'?'#166534':'#6b7280'}}>● {ev.status}</span></td>
+                        <td>
+                          <div style={{display:'flex',gap:7}}>
+                            <button className="btn btn-g" style={{padding:'5px 12px',fontSize:13}} onClick={()=>setEvForm({...ev})}><i className="ti ti-edit" style={{fontSize:14}}></i> Edit</button>
+                            <button className="btn" style={{padding:'5px 12px',fontSize:13,border:'1px solid #fecaca',color:'#dc2626',background:'#fff'}} onClick={()=>setDelModal({type:'event',id:ev.id})}><i className="ti ti-trash" style={{fontSize:14}}></i> Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {evs.length===0 && <div style={{padding:'40px',textAlign:'center'}}><EmptyState icon="ti-calendar-off" msg="No events yet."/></div>}
+            </div>
+          </div>
+          {evForm && <EventFormModal form={evForm} onSave={saveEvent} onClose={()=>setEvForm(null)}/>}
+        </>
+      )}
+
+      {tab==='announcements' && (
+        <>
+          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            <button className="btn btn-p" onClick={()=>setAnForm({title:'',category:'General',body:'',author:'',date:new Date().toISOString().split('T')[0],status:'Published'})}>
+              <i className="ti ti-plus"></i> Add Announcement
+            </button>
+          </div>
+          <div className="card" style={{overflow:'hidden'}}>
+            <div style={{overflowX:'auto'}}>
+              <table>
+                <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Author</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {[...anns].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(ann=>{
+                    const cs=cat(ann.category);
+                    return (
+                      <tr key={ann.id}>
+                        <td><div style={{fontWeight:600,color:'#1a1a1a',maxWidth:220,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ann.title}</div></td>
+                        <td><span className="badge" style={{...cs}}>{ann.category}</span></td>
+                        <td style={{whiteSpace:'nowrap'}}>{fmt(ann.date)}</td>
+                        <td style={{color:'#6b7280',whiteSpace:'nowrap'}}>{ann.author}</td>
+                        <td><span style={{fontSize:12,fontWeight:600,color:ann.status==='Published'?'#166534':'#6b7280'}}>● {ann.status}</span></td>
+                        <td>
+                          <div style={{display:'flex',gap:7}}>
+                            <button className="btn btn-g" style={{padding:'5px 12px',fontSize:13}} onClick={()=>setAnForm({...ann})}><i className="ti ti-edit" style={{fontSize:14}}></i> Edit</button>
+                            <button className="btn" style={{padding:'5px 12px',fontSize:13,border:'1px solid #fecaca',color:'#dc2626',background:'#fff'}} onClick={()=>setDelModal({type:'ann',id:ann.id})}><i className="ti ti-trash" style={{fontSize:14}}></i> Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {anns.length===0 && <div style={{padding:'40px',textAlign:'center'}}><EmptyState icon="ti-bell-off" msg="No announcements yet."/></div>}
+            </div>
+          </div>
+          {anForm && <AnnFormModal form={anForm} onSave={saveAnn} onClose={()=>setAnForm(null)}/>}
+        </>
+      )}
+
+      {/* Delete confirm modal */}
+      {delModal && (
+        <div className="modal-bg">
+          <div className="modal" style={{maxWidth:380}}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+              <div style={{width:44,height:44,borderRadius:12,background:'#fee2e2',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <i className="ti ti-trash" style={{fontSize:22,color:'#dc2626'}}></i>
+              </div>
+              <div>
+                <div style={{fontSize:16,fontWeight:700,color:'#1a1a1a'}}>Confirm Delete</div>
+                <div style={{fontSize:13,color:'#6b7280'}}>This action cannot be undone.</div>
+              </div>
+            </div>
+            <p style={{fontSize:14,color:'#374151',marginBottom:22}}>Are you sure you want to permanently delete this {delModal.type==='event'?'event':'announcement'}?</p>
+            <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
+              <button className="btn btn-s" onClick={()=>setDelModal(null)}>Cancel</button>
+              <button className="btn btn-d" onClick={confirmDelete}><i className="ti ti-trash"></i> Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Event Form Modal */
+function EventFormModal({ form: init, onSave, onClose }) {
+  const [f, setF] = useState(init);
+  const s = (k,v) => setF(x=>({...x,[k]:v}));
+  return (
+    <div className="modal-bg">
+      <div className="modal">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:22}}>
+          <h2 className="fd" style={{fontSize:20,fontWeight:700}}>{f.id?'Edit Event':'Add New Event'}</h2>
+          <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',fontSize:22}}>✕</button>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <FL label="Title *"><input className="inp" value={f.title} onChange={e=>s('title',e.target.value)} placeholder="Event title"/></FL>
+          <div className="form-row" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <FL label="Date *"><input className="inp" type="date" value={f.date} onChange={e=>s('date',e.target.value)}/></FL>
+            <FL label="Category"><select className="inp" value={f.category} onChange={e=>s('category',e.target.value)}>{ECATS.map(c=><option key={c}>{c}</option>)}</select></FL>
+          </div>
+          <div className="form-row" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <FL label="Start Time"><input className="inp" type="time" value={f.time} onChange={e=>s('time',e.target.value)}/></FL>
+            <FL label="End Time"><input className="inp" type="time" value={f.endTime} onChange={e=>s('endTime',e.target.value)}/></FL>
+          </div>
+          <FL label="Location *"><input className="inp" value={f.location} onChange={e=>s('location',e.target.value)} placeholder="Event venue or location"/></FL>
+          <FL label="Description"><textarea className="inp" value={f.description} onChange={e=>s('description',e.target.value)} rows={4} style={{resize:'vertical'}} placeholder="Full event details…"/></FL>
+          <FL label="Status"><select className="inp" value={f.status} onChange={e=>s('status',e.target.value)}><option>Published</option><option>Draft</option></select></FL>
+        </div>
+        <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:22}}>
+          <button className="btn btn-s" onClick={onClose}>Cancel</button>
+          <button className="btn btn-p" onClick={()=>onSave(f)}><i className="ti ti-device-floppy"></i> {f.id?'Save Changes':'Add Event'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Announcement Form Modal */
+function AnnFormModal({ form: init, onSave, onClose }) {
+  const [f, setF] = useState(init);
+  const s = (k,v) => setF(x=>({...x,[k]:v}));
+  return (
+    <div className="modal-bg">
+      <div className="modal">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:22}}>
+          <h2 className="fd" style={{fontSize:20,fontWeight:700}}>{f.id?'Edit Announcement':'Add Announcement'}</h2>
+          <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',color:'#9ca3af',fontSize:22}}>✕</button>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <FL label="Title *"><input className="inp" value={f.title} onChange={e=>s('title',e.target.value)} placeholder="Announcement title"/></FL>
+          <div className="form-row" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <FL label="Category"><select className="inp" value={f.category} onChange={e=>s('category',e.target.value)}>{ACATS.map(c=><option key={c}>{c}</option>)}</select></FL>
+            <FL label="Date"><input className="inp" type="date" value={f.date} onChange={e=>s('date',e.target.value)}/></FL>
+          </div>
+          <FL label="Author / Office *"><input className="inp" value={f.author} onChange={e=>s('author',e.target.value)} placeholder="e.g. Registrar's Office"/></FL>
+          <FL label="Body *"><textarea className="inp" value={f.body} onChange={e=>s('body',e.target.value)} rows={7} style={{resize:'vertical'}} placeholder="Full announcement content…"/></FL>
+          <FL label="Status"><select className="inp" value={f.status} onChange={e=>s('status',e.target.value)}><option>Published</option><option>Draft</option></select></FL>
+        </div>
+        <div style={{display:'flex',gap:10,justifyContent:'flex-end',marginTop:22}}>
+          <button className="btn btn-s" onClick={onClose}>Cancel</button>
+          <button className="btn btn-p" onClick={()=>onSave(f)}><i className="ti ti-device-floppy"></i> {f.id?'Save Changes':'Add Announcement'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── 404 ──────────────────────────────────────────────────── */
+function NotFoundPage({ ctx }) {
+  return (
+    <div style={{textAlign:'center',padding:'80px 24px'}}>
+      <div className="fd" style={{fontSize:90,fontWeight:700,color:'#e5e7eb',lineHeight:1}}>404</div>
+      <h2 className="fd" style={{fontSize:22,fontWeight:600,marginTop:14,marginBottom:8}}>Page Not Found</h2>
+      <p style={{color:'#6b7280',fontSize:14,marginBottom:22}}>The page you're looking for doesn't exist.</p>
+      <button className="btn btn-p" onClick={()=>ctx.nav('dashboard')}><i className="ti ti-home"></i> Go to Dashboard</button>
+    </div>
+  );
+}
+
+/* ── SHARED SMALL COMPONENTS ──────────────────────────────── */
+const MetaItem = ({icon,label,val,bg,ic}) => (
+  <div style={{display:'flex',alignItems:'center',gap:10}}>
+    <div style={{width:34,height:34,borderRadius:9,background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+      <i className={`ti ${icon}`} style={{fontSize:17,color:ic}}></i>
+    </div>
+    <div>
+      <div style={{fontSize:11,color:'#6b7280',textTransform:'uppercase',letterSpacing:'.05em',fontWeight:600}}>{label}</div>
+      <div style={{fontSize:14,fontWeight:600,color:'#1a1a1a'}}>{val}</div>
+    </div>
+  </div>
+);
+
+const FL = ({label,children}) => (
+  <div>
+    <label style={{fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6}}>{label}</label>
+    {children}
+  </div>
+);
+
+const EmptyState = ({icon,msg}) => (
+  <div style={{padding:'32px 20px',textAlign:'center',color:'#9ca3af'}}>
+    <i className={`ti ${icon}`} style={{fontSize:40,display:'block',marginBottom:10,opacity:.6}}></i>
+    <div style={{fontSize:14}}>{msg}</div>
+  </div>
+);
+
+/* ── MOUNT ────────────────────────────────────────────────── */
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>
